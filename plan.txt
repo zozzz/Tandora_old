@@ -171,6 +171,12 @@ Fordító felépítése:
     JavaScriptModul:
         - a CompilerModulban definiált osztályokat kell itt felülírni, és gyakorlatilag implementálva van egy nyelv
 
+	Mindegyik osztálynak lesz egy statikus metódusa(createFromTokenStream(stream)),
+	ami képes létrehozni egy streamből az adott osztályt, értelem szerűen a streamnek
+	azzal a tokennek kall kezdődnie, ahonnan kezdődik az adott osztály leírása.
+	Az osztályok konstruktorai pedig úgy épülnek fel, hogy jól paraméterezve létre tudja hozni az adott
+	kód részletet.
+	
     Compiler:
         CodeContext
             |_ TopLevelContext
@@ -261,6 +267,35 @@ Fordító felépítése:
             |_ CodeBlock ami a {} zárójelek között van
             |_ ExpressionBlock Több kifejezést tartalmaz pl.: az IfStatement feltétele stb...
             |_ Identifier
+            
+	pl.:
+		class IntLiteral(NumberLiteral):
+			def __init__(self, value=0):
+				self.value = value
+			
+			@classmethod
+			def createFromTokenStream(cls, stream, childs=None):
+				tok = stream.nextToken()
+				if tok.type & (TParser.T_LITERAL | TParser.T_INT):
+					return IntLiteral(tok.value)
+				return null
+		
+		# register object and start token
+		ScriptElement.registerClass(IntLiteral, TParser.L_INT)
+		ScriptElement.registerClass(Add, TParser.L_NUMBER | TParser.T_IDENTIFIER, createStart=True)
+		ScriptElement.registerClass(Identifier, TParser.T_IDENTIFIER)
+		valami prioritási sorrendet majd fel kell állítani ezekből az adatokból
+		
+		x + 3
+		id = Identifier.createFromTokenStream(stream)
+		add = Add.createFromTokenStream(stream, [id])
+				tok = stream.nextToken()
+				if tok.type & (TParser.T_OPERATOR | TParser.O_ADD):
+					left = childs[0]
+					right = ScriptElement.createFromTokenStream(stream)
+					return Add(left, right)
+				return null // ha null-al tér vissza visszaállítja a streamet a kezdetekhez
+					
 
 Complex modulok/csomagok támogatása (több osztály csomagolva 1 fájlba)
 ======================================================================
