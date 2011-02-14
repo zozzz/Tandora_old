@@ -264,3 +264,5 @@ Fordító felépítése:
 
 Complex modulok/csomagok támogatása (több osztály csomagolva 1 fájlba)
 ======================================================================
+Összecsomagolni zip-pel az összes fájlt + mellérakni egy leíró xml-t fájlt
++ minden osztály codeintel fájlját
